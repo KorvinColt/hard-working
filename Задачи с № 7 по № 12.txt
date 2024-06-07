@@ -1,0 +1,96 @@
+ВЫПОЛНЕНИЕ ЗАДАЧ С № 7 ПО № 12.
+
+7. В подключенном MySQL репозитории создать базу данных “Друзья
+человека”
+8. Создать таблицы с иерархией из диаграммы в БД
+9. Заполнить низкоуровневые таблицы именами(животных), командами
+которые они выполняют и датами рождения
+10. Удалив из таблицы верблюдов, т.к. верблюдов решили перевезти в другой
+питомник на зимовку. Объединить таблицы лошади, и ослы в одну таблицу.
+11.Создать новую таблицу “молодые животные” в которую попадут все
+животные старше 1 года, но младше 3 лет и в отдельном столбце с точностью
+до месяца подсчитать возраст животных в новой таблице
+12. Объединить все таблицы в одну, при этом сохраняя поля, указывающие на
+прошлую принадлежность к старым таблицам.
+
+
+
+ubundu@ubundu-GB:~$ sudo service mysql start
+[sudo] пароль для ubundu: 
+ubundu@ubundu-GB:~$ mysql -u root -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 8
+Server version: 8.0.37 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> CREATE DATABASE Друзья_человека;
+Query OK, 1 row affected (0,17 sec)
+
+mysql> USE Друзья_человека;
+Database changed
+mysql> 
+mysql> CREATE TABLE Домашние_животные (
+    ->     id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     имя VARCHAR(50),
+    ->     вид VARCHAR(50),
+    ->     команды TEXT,
+    ->     дата_рождения DATE
+    -> );
+Query OK, 0 rows affected (0,22 sec)
+
+mysql> 
+mysql> CREATE TABLE Вьючные_животные (
+    ->     id INT AUTO_INCREMENT PRIMARY KEY,
+    ->     имя VARCHAR(50),
+    ->     вид VARCHAR(50),
+    ->     команды TEXT,
+    ->     дата_рождения DATE
+    -> );
+Query OK, 0 rows affected (0,10 sec)
+
+mysql> INSERT INTO Домашние_животные (имя, вид, команды, дата_рождения)
+    -> VALUES ('Бобик', 'Собака', 'Сидеть, Лежать', '2020-06-01');
+Query OK, 1 row affected (0,05 sec)
+
+mysql> 
+mysql> INSERT INTO Вьючные_животные (имя, вид, команды, дата_рождения)
+    -> VALUES ('Молния', 'Лошадь', 'Бежать, Стоять', '2018-04-23');
+Query OK, 1 row affected (0,03 sec)
+
+mysql> 
+mysql> DELETE FROM Вьючные_животные WHERE вид = 'Верблюд';
+Query OK, 0 rows affected (0,01 sec)
+
+mysql> CREATE TABLE Лошади_и_ослы AS
+    -> SELECT * FROM Вьючные_животные WHERE вид IN ('Лошадь', 'Осел');
+Query OK, 1 row affected (0,12 sec)
+Records: 1  Duplicates: 0  Warnings: 0
+
+mysql> CREATE TABLE Молодые_животные AS
+    -> SELECT *, TIMESTAMPDIFF(MONTH, дата_рождения, CURDATE()) AS возраст_в_месяцах
+    -> FROM Домашние_животные
+    -> WHERE TIMESTAMPDIFF(YEAR, дата_рождения, CURDATE()) BETWEEN 1 AND 3;
+Query OK, 0 rows affected (0,38 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Молодые_животные
+    -> SELECT *, TIMESTAMPDIFF(MONTH, дата_рождения, CURDATE()) AS возраст_в_месяцах
+    -> FROM Вьючные_животные
+    -> WHERE TIMESTAMPDIFF(YEAR, дата_рождения, CURDATE()) BETWEEN 1 AND 3;
+Query OK, 0 rows affected (0,00 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> CREATE TABLE Все_животные AS
+    -> SELECT *, 'Домашние' AS происхождение FROM Домашние_животные
+    -> UNION
+    -> SELECT *, 'Вьючные' AS происхождение FROM Вьючные_животные;
+Query OK, 2 rows affected (0,15 sec)
+Records: 2  Duplicates: 0  Warnings: 0
